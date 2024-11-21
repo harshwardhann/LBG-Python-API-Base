@@ -19,11 +19,11 @@ spec:
         app: flask-api
     spec:
       containers:
-      - name: flask-container
-        image: harshwardhann/lbgpythonapibase:latest:latest
-        imagePullPolicy: Always
-        ports: 
-        - containerPort: 8080
+        - name: flask-container
+          image: harshwardhann/lbgpythonapibase:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
 ---
 apiVersion: v1
 kind: Service
@@ -34,6 +34,6 @@ spec:
   selector:
     app: flask-api
   ports:
-  - protocol: TCP
-    port: 8080
-    targetPort: 8080
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
