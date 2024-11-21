@@ -4,101 +4,74 @@ pipeline {
         stage('Init') {
             steps {
                 script {
-			        if (env.GIT_BRANCH == 'origin/main') {
+                    if (env.GIT_BRANCH == 'origin/main') {
                         sh '''
                         kubectl create ns prod || echo "------- Prod Namespace Already Exists -------"
                         '''
                     } else if (env.GIT_BRANCH == 'origin/dev') {
                         sh '''
-                        kubectl create ns dev || echo "------- Dev Namespace Already Exists -------"
+                        kubectl create ns dev || echo "------- Prod Namespace Already Exists -------"
                         '''
                     } else {
-                        sh '''
-                        echo "Unrecognised branch"
-                        '''
+                        sh'echo "Unrecogognised branch"'
                     }
-		        }
-           }
+                }
+            }
         }
         stage('Build') {
             steps {
                 script {
-			        if (env.GIT_BRANCH == 'origin/main') {
+                    if (env.GIT_BRANCH == 'origin/main') {
                         sh '''
-                        docker build -t gcr.io/lbg-mea-16/piers-project-flask-api -t gcr.io/lbg-mea-16/piers-project-flask-api:prod-v${BUILD_NUMBER} . 
+                        docker build -t harshwardhann/lbgpythonapibase:latest -t harshwardhann/lbgpythonapibase:v${BUILD_NUMBER} .
                         '''
                     } else if (env.GIT_BRANCH == 'origin/dev') {
                         sh '''
-                        docker build -t gcr.io/lbg-mea-16/piers-project-flask-api -t gcr.io/lbg-mea-16/piers-project-flask-api:dev-v${BUILD_NUMBER} .         
+                        docker build -t harshwardhann/lbgpythonapibase:latest -t harshwardhann/lbgpythonapibase:v${BUILD_NUMBER} .
                         '''
                     } else {
-                        sh '''
-                        echo "Unrecognised branch"
-                        '''
+                        sh'echo "Unrecogognised branch"'
                     }
-		        }
-           }
+                }
+            }
         }
         stage('Push') {
             steps {
                 script {
-			        if (env.GIT_BRANCH == 'origin/main') {
+                    if (env.GIT_BRANCH == 'origin/main') {
                         sh '''
-                        docker push gcr.io/lbg-mea-16/piers-project-flask-api
-                        docker push gcr.io/lbg-mea-16/piers-project-flask-api:prod-v${BUILD_NUMBER}
+                        docker push harshwardhann/lbgpythonapibase:latest
+                        docker push harshwardhann/lbgpythonapibase:v${BUILD_NUMBER}
                         '''
                     } else if (env.GIT_BRANCH == 'origin/dev') {
                         sh '''
-                        docker push gcr.io/lbg-mea-16/piers-project-flask-api
-                        docker push gcr.io/lbg-mea-16/piers-project-flask-api:dev-v${BUILD_NUMBER}
+                        docker push harshwardhann/lbgpythonapibase:latest
+                        docker push harshwardhann/lbgpythonapibase:v${BUILD_NUMBER}
                         '''
                     } else {
-                        sh '''
-                        echo "Unrecognised branch"
-                        '''
+                        sh'echo "Unrecogognised branch"'
                     }
-		        }
-           }
+                }
+            }
         }
         stage('Deploy') {
             steps {
                 script {
-			        if (env.GIT_BRANCH == 'origin/main') {
-                        sh '''
-                        kubectl apply -n prod -f ./kubernetes
-                        kubectl set image deployment/flask-api-deployment flask-container=gcr.io/lbg-mea-16/piers-project-flask-api:prod-v${BUILD_NUMBER} -n prod
+                    if (env.GIT_BRANCH == 'origin/main') {
+                        sh'''
+                        kubectl apply -f ./kubernetes -n prod
+                        kubectl set image deployment/flask-deployment flask-container=harshwardhann/lbgpythonapibase:v${BUILD_NUMBER} -n prod
                         '''
                     } else if (env.GIT_BRANCH == 'origin/dev') {
-                        sh '''
-                        kubectl apply -n dev -f ./kubernetes
-                        kubectl set image deployment/flask-api-deployment flask-container=gcr.io/lbg-mea-16/piers-project-flask-api:dev-v${BUILD_NUMBER} -n dev
+                        sh'''
+                        kubectl apply -f ./kubernetes -n dev
+                        kubectl set image deployment/flask-deployment flask-container=harshwardhann/lbgpythonapibase:v${BUILD_NUMBER} -n dev
                         '''
                     } else {
-                        sh '''
-                        echo "Unrecognised branch"
-                        '''
-                    }
-		        }
-            }
-        }
-        stage('Cleanup') {
-            steps {
-                script {
-                    if (env.GIT_BRANCH == 'origin/main') {
-                        sh '''
-                        docker rmi gcr.io/lbg-mea-16/piers-project-flask-api:prod-v${BUILD_NUMBER}
-                        '''
-                    } else if (env.GIT_BRANCH == 'origin/dev') {
-                        sh '''
-                        docker rmi gcr.io/lbg-mea-16/piers-project-flask-api:dev-v${BUILD_NUMBER}
-                        '''
+                        sh'echo "Unrecogognised branch"'
                     }
                 }
-                sh '''
-                docker rmi gcr.io/lbg-mea-16/piers-project-flask-api:latest
-                docker system prune -f 
-                '''
-           }
+            }
         }
     }
 }
